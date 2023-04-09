@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Graphic Editor</title>
+    <script type="text/javascript" src="script.js"></script>
+    <style>
+        #import-result {
+            display:none;
+        }
+        #graphic-canvas{
+            border: 1px solid;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="graphic-canvas" width="1000" height="700">
+
+    </canvas>
+    <button id="zoom-in">Zoom In</button>
+    <button id="zoom-out">Zoom Out</button>
+    <button id="undo">Undo</button>
+    <button id="redo">Redo</button>
+    <button id="save">Save</button>
+    <input type="color" name="color"/>
+    <label for="pen-weight">Pen Weight</label>
+    <input type="number" id="pen-weight" name="pen-weight" min="1" max="100" value="10"/>
+    <label for="opacity">Opacity</label>
+    <input type="number" id="opacity" name="opacity" min="0" max="1" value="1"/>
+    <button id="pen">Pen</button>
+    <button id="eraser">Eraser</button>
+    <button id="fill">Fill</button>
+    <button id="picker">Picker</button>
+    <span>MouseX <span id="mouse-x"></span></span>
+    <span>MouseY <span id="mouse-y"></span></span>
+    <label for="load-image">Load Image</label>
+    <input type="file" id="load-image"/>
+    <label for="import-image">Import Image</label>
+    <input type="file" id="import-image"/>
+    <img id="import-result" draggable="false">
+    <button id="new">New</button>
+</body>
+</html>
