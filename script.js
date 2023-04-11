@@ -1,5 +1,4 @@
-window.addEventListener('load', function(){
-
+window.addEventListener(events.LOAD, function(){
     const penMode = {
         PEN: 0,
         ERASER: 1,
@@ -33,7 +32,7 @@ window.addEventListener('load', function(){
     const importImageBuffer = new Image();
     const loadFileReader = new FileReader();
     const importFileReader = new FileReader();
-
+    ImageImport.init(canvas, ctx, saveProgress, importImage);
 
     let drag = false;
     let imageDrag = false;
@@ -46,87 +45,55 @@ window.addEventListener('load', function(){
     let lastY;
     let index = 0;
     let penOpacity = 1;
+    let imageDegree = 0;
     let isImport = false;
     let originW, originH;
+    let flipX = 1, flipY = 1;
 
-    buffer.addEventListener('load', function(){
+    buffer.addEventListener(events.LOAD, function(){
         ctx.drawImage(buffer, 0 ,0);
     });
 
-    loadFileReader.addEventListener('load', function(e){
+    loadFileReader.addEventListener(events.LOAD, function(e){
         ctx.clearRect(0,0,1000,700);
         loadImageBuffer.src = e.target.result;
     });
 
-    importFileReader.addEventListener('load', function(e){
+    importFileReader.addEventListener(events.LOAD, function(e){
         importImageBuffer.src = e.target.result;
     });
 
-    loadImageBuffer.addEventListener('load', function(){
+    loadImageBuffer.addEventListener(events.LOAD, function(){
         ctx.drawImage(loadImageBuffer, 0, 0);
         saveProgress();
     });
 
-    importImageBuffer.addEventListener('load', function(){
-        importResult.src = importImageBuffer.src;
-        importResult.style.display = "block";
-        importResult.style.position = "absolute";
-        importResult.style.top = "8px";
-        importResult.style.left = "8px";
-        importResult.style.border = "1px solid cyan";
-        isImport = true;
-        [originW, originH] = [importResult.clientWidth, importResult.clientHeight];
+    importImageBuffer.addEventListener(events.LOAD, function(){
+        ImageImport.open(importResult, importImageBuffer);
     });
 
-    document.addEventListener('keydown', function(e){
-        if (e.keyCode == 13 && isImport)
-        {
-            const x = parseInt(importResult.style.left) - canvas.getClientRects()[0].x;
-            const y = parseInt(importResult.style.top) - canvas.getClientRects()[0].y;
-            const w = parseInt(importResult.clientWidth);
-            const h = parseInt(importResult.clientHeight);
-            importResult.style.display="none";
-            ctx.drawImage(importImageBuffer, x, y, w, h);
-            saveProgress();
-        }
-        if (e.keyCode == 107 && isImport)
-        {
-            const w = importResult.clientWidth;
-            const h = importResult.clientHeight;
-
-            importResult.style.width = w + ((0.1 * originW)) + "px";
-            importResult.style.height = h + ((0.1 * originH)) + "px";
-        }
-        if (e.keyCode == 109 && isImport)
-        {
-            const w = importResult.clientWidth;
-            const h = importResult.clientHeight;
-
-            importResult.style.width = w - ((0.1 * originW)) + "px";
-            importResult.style.height = h - ((0.1 * originH)) + "px";
-        }
-        
-        if (e.shiftKey && e.ctrlKey && e.keyCode == 90)
+    document.addEventListener(events.KEYDOWN, function(e){
+        if (e.shiftKey && e.ctrlKey && e.keyCode == keyboardKeys.Z)
         {
             redoHandler();
         }
-        else if (e.ctrlKey && e.keyCode == 90)
+        else if (e.ctrlKey && e.keyCode == keyboardKeys.Z)
         {
             undoHandler();
         }
-        else if (e.keyCode == 80)
+        else if (e.keyCode == keyboardKeys.P)
         {
             mode = penMode.PEN;
         }
-        else if (e.keyCode == 69)
+        else if (e.keyCode == keyboardKeys.E)
         {
             mode = penMode.ERASER;
         }
-        else if (e.keyCode == 71)
+        else if (e.keyCode == keyboardKeys.G)
         {
             mode = penMode.FILL;
         }
-        else if (e.keyCode == 73)
+        else if (e.keyCode == keyboardKeys.I)
         {
             mode = penMode.PICKER;
         }
@@ -203,7 +170,7 @@ window.addEventListener('load', function(){
         }
     }
 
-    canvas.addEventListener('mouseup', function(e){
+    canvas.addEventListener(events.MOUSEUP, function(e){
         mouseX = parseInt(e.clientX - canvas.getClientRects()[0].x);
         mouseY = parseInt(e.clientY - canvas.getClientRects()[0].y);
         drag = false;
@@ -211,12 +178,12 @@ window.addEventListener('load', function(){
         if (mode != penMode.FILL || mode != penMode.PICKER)
             saveProgress();
     });
-    canvas.addEventListener('mouseout', function(e){
+    canvas.addEventListener(events.MOUSEOVER, function(e){
         mouseX = parseInt(e.clientX - canvas.getClientRects()[0].x);
         mouseY = parseInt(e.clientY - canvas.getClientRects()[0].y);
         drag = false;
     });
-    canvas.addEventListener('mousedown', function(e){
+    canvas.addEventListener(events.MOUSEDOWN, function(e){
         mouseX = parseInt(e.clientX - canvas.getClientRects()[0].x);
         mouseY = parseInt(e.clientY - canvas.getClientRects()[0].y);
         lastX = mouseX;
@@ -224,7 +191,7 @@ window.addEventListener('load', function(){
         ctx.globalAlpha = penOpacity;
         drag = true;
     });
-    canvas.addEventListener('mousemove', function(e){
+    canvas.addEventListener(events.MOUSEMOVE, function(e){
         mouseX = parseInt(e.clientX - canvas.getClientRects()[0].x);
         mouseY = parseInt(e.clientY - canvas.getClientRects()[0].y);
         mouseXCounter.innerText = mouseX;
@@ -270,7 +237,7 @@ window.addEventListener('load', function(){
             buffer.src = history[index];
         }
     }
-    canvas.addEventListener('click', function(e){
+    canvas.addEventListener(events.CLICK, function(e){
         mouseX = parseInt(e.clientX - canvas.getClientRects()[0].x);
         mouseY = parseInt(e.clientY - canvas.getClientRects()[0].y);
         if (mode == penMode.PICKER)
@@ -287,17 +254,17 @@ window.addEventListener('load', function(){
             saveProgress();
         }
     })
-    zoomIn.addEventListener('click', function(){
+    zoomIn.addEventListener(events.CLICK, function(){
         ctx.scale(2,2);
     });
-    zoomOut.addEventListener('click', function(){
+    zoomOut.addEventListener(events.CLICK, function(){
         ctx.scale(0.5, 0.5);
     });
 
-    undo.addEventListener('click', undoHandler);
-    redo.addEventListener('click', redoHandler);
+    undo.addEventListener(events.CLICK, undoHandler);
+    redo.addEventListener(events.CLICK, redoHandler);
 
-    save.addEventListener('click', function(){
+    save.addEventListener(events.CLICK, function(){
         const canvasUrl = canvas.toDataURL();
         const anchor = document.createElement('a');
         anchor.href = canvasUrl;
@@ -305,51 +272,35 @@ window.addEventListener('load', function(){
         anchor.click();
         anchor.remove();
     });
-    color.addEventListener('change', function(e){
+    color.addEventListener(events.CLICK, function(e){
         currentColor = e.target.value;
     });
-    penWeight.addEventListener('change', function(e){
+    penWeight.addEventListener(events.CHANGE, function(e){
         weight = e.target.value;
     });
-    pen.addEventListener('click', function(){
+    pen.addEventListener(events.CLICK, function(){
         mode = penMode.PEN;
     });
-    eraser.addEventListener('click', function(){
+    eraser.addEventListener(events.CLICK, function(){
         mode = penMode.ERASER;
     });
-    fill.addEventListener('click', function(){
+    fill.addEventListener(events.CLICK, function(){
         mode = penMode.FILL;
     })
-    picker.addEventListener('click', function(){
+    picker.addEventListener(events.CLICK, function(){
         mode = penMode.PICKER;
     });
-    opacity.addEventListener('change', function(e){
+    opacity.addEventListener(events.CHANGE, function(e){
         penOpacity = e.target.value;
     });
-    loadImage.addEventListener('change', function(e){
+    loadImage.addEventListener(events.CHANGE, function(e){
         loadFileReader.readAsDataURL(e.target.files[0]);
     });
-    importImage.addEventListener('change', function(e){
-        importFileReader.readAsDataURL(e.target.files[0]);
+    importImage.addEventListener(events.CHANGE, function(e){
+        if (e.target.files.length)
+            importFileReader.readAsDataURL(e.target.files[0]);
     })
-    importResult.addEventListener('click', function(e){
-        mouseX = parseInt(e.clientX - canvas.getClientRects()[0].x);
-        mouseY = parseInt(e.clientY - canvas.getClientRects()[0].y);
-        lastX = mouseX;
-        lastY = mouseY;
-        imageDrag = !imageDrag;
-    })
-    importResult.addEventListener('mousemove', function(e){
-        if (drawImage) {
-            mouseX = parseInt(e.clientX - canvas.getClientRects()[0].x);
-            mouseY = parseInt(e.clientY - canvas.getClientRects()[0].y);
-            if (imageDrag){
-                importResult.style.top = (mouseY) + "px";
-                importResult.style.left = (mouseX) + "px";
-            }
-        }
-    });
-    newCanvas.addEventListener('click', function(){
+    newCanvas.addEventListener(events.CLICK, function(){
         if (confirm("Your work isn unsaved and your progress will be deleted. Do you want to create a new canvas?"))
         {
             while (history.length)
@@ -358,4 +309,8 @@ window.addEventListener('load', function(){
             ctx.clearRect(0,0,1000,700);
         }
     });
+    document.addEventListener(events.MOUSEOVER, function(e){
+        
+        //console.log((importResult.getClientRects()[0].x - canvas.getClientRects()[0].x), (importResult.getClientRects()[0].y - canvas.getClientRects()[0].y));
+    })
 });
