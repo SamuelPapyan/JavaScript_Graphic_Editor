@@ -35,7 +35,6 @@ window.addEventListener(events.LOAD, function(){
     ImageImport.init(canvas, ctx, saveProgress, importImage);
 
     let drag = false;
-    let imageDrag = false;
     let currentColor = "#000000";
     let weight = penWeight.value;
     let mode = penMode.PEN;
@@ -45,10 +44,6 @@ window.addEventListener(events.LOAD, function(){
     let lastY;
     let index = 0;
     let penOpacity = 1;
-    let imageDegree = 0;
-    let isImport = false;
-    let originW, originH;
-    let flipX = 1, flipY = 1;
 
     buffer.addEventListener(events.LOAD, function(){
         ctx.drawImage(buffer, 0 ,0);
@@ -250,7 +245,8 @@ window.addEventListener(events.LOAD, function(){
         {
             const srcColor = rgbToHex(ctx.getImageData(mouseX, mouseY, 1 ,1).data);
             ctx.fillStyle = currentColor;
-            fillFunc(mouseX, mouseY, srcColor);
+            if (srcColor != currentColor + parseInt(penOpacity * 255).toString(16))
+                fillFunc(mouseX, mouseY, srcColor);
             saveProgress();
         }
     })
@@ -272,7 +268,7 @@ window.addEventListener(events.LOAD, function(){
         anchor.click();
         anchor.remove();
     });
-    color.addEventListener(events.CLICK, function(e){
+    color.addEventListener(events.CHANGE, function(e){
         currentColor = e.target.value;
     });
     penWeight.addEventListener(events.CHANGE, function(e){
