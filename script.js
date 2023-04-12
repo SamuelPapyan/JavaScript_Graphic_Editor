@@ -74,7 +74,13 @@ window.addEventListener(events.LOAD, function(){
         }
         else if (e.ctrlKey && e.keyCode == keyboardKeys.Z)
         {
+            e.preventDefault();
             undoHandler();
+        }
+        else if (e.ctrlKey && e.keyCode == keyboardKeys.S)
+        {
+            e.preventDefault();
+            saveCanvas();
         }
         else if (e.keyCode == keyboardKeys.P)
         {
@@ -260,19 +266,22 @@ window.addEventListener(events.LOAD, function(){
     undo.addEventListener(events.CLICK, undoHandler);
     redo.addEventListener(events.CLICK, redoHandler);
 
-    save.addEventListener(events.CLICK, function(){
+    function saveCanvas(){
         const canvasUrl = canvas.toDataURL();
         const anchor = document.createElement('a');
         anchor.href = canvasUrl;
         anchor.download = "javascript-graphic-editor-demo-download";
         anchor.click();
         anchor.remove();
-    });
+    }
+
+    save.addEventListener(events.CLICK, saveCanvas);
     color.addEventListener(events.CHANGE, function(e){
         currentColor = e.target.value;
     });
     penWeight.addEventListener(events.CHANGE, function(e){
         weight = e.target.value;
+        penWeight.blur();
     });
     pen.addEventListener(events.CLICK, function(){
         mode = penMode.PEN;
@@ -288,6 +297,7 @@ window.addEventListener(events.LOAD, function(){
     });
     opacity.addEventListener(events.CHANGE, function(e){
         penOpacity = e.target.value;
+        opacity.blur();
     });
     loadImage.addEventListener(events.CHANGE, function(e){
         loadFileReader.readAsDataURL(e.target.files[0]);
