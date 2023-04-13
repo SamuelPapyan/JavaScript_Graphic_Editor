@@ -3,7 +3,8 @@ window.addEventListener(events.LOAD, function(){
         PEN: 0,
         ERASER: 1,
         FILL: 2,
-        PICKER: 3
+        PICKER: 3,
+        MAGIC_ERASER: 4
     };
 
     const canvas = document.querySelector('#graphic-canvas');
@@ -18,6 +19,7 @@ window.addEventListener(events.LOAD, function(){
     const opacity = document.querySelector('input[name="opacity"]');
     const pen = document.querySelector('#pen');
     const eraser = document.querySelector('#eraser');
+    const magicalEraser = this.document.querySelector('#magical-eraser');
     const fill = document.querySelector('#fill');
     const picker = document.querySelector('#picker');
     const mouseXCounter = document.querySelector('#mouse-x');
@@ -171,6 +173,49 @@ window.addEventListener(events.LOAD, function(){
         }
     }
 
+    function magicalEraserFunc(x, y, srcCol)
+    {
+        const colorStack = [[x, y]];
+        let leftReach, rightReach, posX, posY;
+        while (colorStack.length > 0) {
+            posX = colorStack[colorStack.length - 1][0];
+            posY = colorStack[colorStack.length - 1][1];
+            colorStack.pop();
+            leftReach = false;
+            rightReach = false;
+            while (posY > canvas.getClientRects()[0].y && rgbToHex(ctx.getImageData(posX, posY, 1, 1).data) == srcCol)
+            {
+                posY--;
+            }
+            posY++;
+            while (posY < 699 && rgbToHex(ctx.getImageData(posX, posY, 1, 1).data) == srcCol)
+            {
+                if (posX - 1 > canvas.getClientRects()[0].x)
+                {
+                    if (rgbToHex(ctx.getImageData(posX - 1, posY, 1, 1).data) != srcCol)
+                        leftReach = false;
+                    if (rgbToHex(ctx.getImageData(posX - 1, posY, 1, 1).data) == srcCol && !leftReach)
+                    {
+                        colorStack.push([posX - 1, posY]);
+                        leftReach = true;
+                    }
+                }
+                if (posX + 1 < 999)
+                {
+                    if (rgbToHex(ctx.getImageData(posX + 1, posY, 1, 1).data) != srcCol)
+                        rightReach = false;
+                    if (rgbToHex(ctx.getImageData(posX + 1, posY, 1, 1).data) == srcCol && !rightReach)
+                    {
+                        colorStack.push([posX + 1, posY]);
+                        rightReach = true;
+                    }
+                }
+                ctx.clearRect(posX, posY, 1, 1);
+                posY++;
+            }
+        }
+    }
+
     canvas.addEventListener(events.MOUSEUP, function(e){
         mouseX = parseInt(e.clientX - canvas.getClientRects()[0].x);
         mouseY = parseInt(e.clientY - canvas.getClientRects()[0].y);
@@ -247,13 +292,23 @@ window.addEventListener(events.LOAD, function(){
             currentColor = rgbToHex(imageData).slice(0,7);
             color.value = currentColor;
         }
-        if (mode == penMode.FILL)
+        else if (mode == penMode.FILL)
         {
             const srcColor = rgbToHex(ctx.getImageData(mouseX, mouseY, 1 ,1).data);
+            console.log(srcColor, currentColor);
             ctx.fillStyle = currentColor;
             if (srcColor != currentColor + parseInt(penOpacity * 255).toString(16))
                 fillFunc(mouseX, mouseY, srcColor);
             saveProgress();
+        }
+        else if (mode == penMode.MAGIC_ERASER)
+        {
+            const srcPoint = ctx.getImageData(mouseX, mouseY, 1, 1).data;
+            console.log(srcPoint[3]);
+            if (srcPoint[3] > 0)
+            {
+                magicalEraserFunc(mouseX, mouseY, rgbToHex(srcPoint));
+            }
         }
     })
     zoomIn.addEventListener(events.CLICK, function(){
@@ -289,6 +344,9 @@ window.addEventListener(events.LOAD, function(){
     eraser.addEventListener(events.CLICK, function(){
         mode = penMode.ERASER;
     });
+    magicalEraser.addEventListener(events.CLICK, function(){
+        mode = penMode.MAGIC_ERASER;
+    })
     fill.addEventListener(events.CLICK, function(){
         mode = penMode.FILL;
     })
