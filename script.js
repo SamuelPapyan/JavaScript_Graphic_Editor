@@ -100,6 +100,16 @@ window.addEventListener(events.LOAD, function(){
         {
             mode = penMode.PICKER;
         }
+        else if (e.ctrlKey && e.keyCode == keyboardKeys.L)
+        {
+            e.preventDefault();
+            loadImage.click();
+        }
+        else if (e.ctrlKey && e.keyCode == keyboardKeys.O)
+        {
+            e.preventDefault();
+            importImage.click();
+        }
     });
 
     ctx.lineCap = 'round';
