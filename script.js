@@ -183,28 +183,47 @@ window.addEventListener(events.LOAD, function(){
         }
     }
 
+    function colorEuclideanDistance(col1, col2)
+    {
+        const col1Val = col1.slice(1);
+        const col2Val = col2.slice(1);
+        const [px, py, pz] = [parseInt(col1Val.slice(0, 2), 16), parseInt(col1Val.slice(2, 4), 16), parseInt(col1Val.slice(5, 6), 16)];
+        const [qx, qy, qz] = [parseInt(col2Val.slice(0, 2), 16), parseInt(col2Val.slice(2, 4), 16), parseInt(col2Val.slice(5, 6), 16)];
+        const d = Math.sqrt(Math.pow(px - qx, 2) + Math.pow(py - qy, 2) + Math.pow(pz - qz, 2));
+        return d;
+    }
+
     function magicalEraserFunc(x, y, srcCol)
     {
         const colorStack = [[x, y]];
-        let leftReach, rightReach, posX, posY;
+        let leftReach, rightReach, posX, posY, posColor, posAlpha;
         while (colorStack.length > 0) {
             posX = colorStack[colorStack.length - 1][0];
             posY = colorStack[colorStack.length - 1][1];
+            posColor = rgbToHex(ctx.getImageData(posX, posY, 1, 1).data).slice(0, 7);
+            posAlpha = ctx.getImageData(posX, posY, 1, 1).data[3];
             colorStack.pop();
             leftReach = false;
             rightReach = false;
-            while (posY > canvas.getClientRects()[0].y && rgbToHex(ctx.getImageData(posX, posY, 1, 1).data) == srcCol)
+            while (posY > canvas.getClientRects()[0].y && colorEuclideanDistance(posColor, srcCol) <= 50 && (posAlpha > 0 && posAlpha <= 255))
             {
                 posY--;
+                posColor = rgbToHex(ctx.getImageData(posX, posY, 1, 1).data).slice(0, 7);
+                posAlpha = ctx.getImageData(posX, posY, 1, 1).data[3];
             }
             posY++;
-            while (posY < 699 && rgbToHex(ctx.getImageData(posX, posY, 1, 1).data) == srcCol)
+            posColor = rgbToHex(ctx.getImageData(posX, posY, 1, 1).data).slice(0, 7);
+            posAlpha = ctx.getImageData(posX, posY, 1, 1).data[3];
+
+            while (posY < 699 && colorEuclideanDistance(posColor, srcCol) <= 50 && (posAlpha > 0 && posAlpha <= 255))
             {
                 if (posX - 1 > canvas.getClientRects()[0].x)
                 {
-                    if (rgbToHex(ctx.getImageData(posX - 1, posY, 1, 1).data) != srcCol)
+                    const hexColor = rgbToHex(ctx.getImageData(posX - 1, posY, 1, 1).data).slice(0, 7);
+                    const alpha = ctx.getImageData(posX - 1, posY, 1, 1).data[3];
+                    if (colorEuclideanDistance(hexColor, srcCol) > 50 || alpha == 255 || alpha == 0)
                         leftReach = false;
-                    if (rgbToHex(ctx.getImageData(posX - 1, posY, 1, 1).data) == srcCol && !leftReach)
+                    if (colorEuclideanDistance(hexColor, srcCol) <= 50 && !leftReach)
                     {
                         colorStack.push([posX - 1, posY]);
                         leftReach = true;
@@ -212,9 +231,11 @@ window.addEventListener(events.LOAD, function(){
                 }
                 if (posX + 1 < 999)
                 {
-                    if (rgbToHex(ctx.getImageData(posX + 1, posY, 1, 1).data) != srcCol)
+                    const hexColor = rgbToHex(ctx.getImageData(posX + 1, posY, 1, 1).data).slice(0, 7);
+                    const alpha = ctx.getImageData(posX + 1, posY, 1, 1).data[3];
+                    if (colorEuclideanDistance(hexColor, srcCol) > 50 || alpha == 255 || alpha == 0)
                         rightReach = false;
-                    if (rgbToHex(ctx.getImageData(posX + 1, posY, 1, 1).data) == srcCol && !rightReach)
+                    if (colorEuclideanDistance(hexColor, srcCol) <= 50 && !rightReach)
                     {
                         colorStack.push([posX + 1, posY]);
                         rightReach = true;
@@ -222,6 +243,8 @@ window.addEventListener(events.LOAD, function(){
                 }
                 ctx.clearRect(posX, posY, 1, 1);
                 posY++;
+                posColor = rgbToHex(ctx.getImageData(posX, posY, 1, 1).data).slice(0, 7);
+                posAlpha = ctx.getImageData(posX, posY, 1, 1).data[3];
             }
         }
     }
@@ -305,7 +328,6 @@ window.addEventListener(events.LOAD, function(){
         else if (mode == penMode.FILL)
         {
             const srcColor = rgbToHex(ctx.getImageData(mouseX, mouseY, 1 ,1).data);
-            console.log(srcColor, currentColor);
             ctx.fillStyle = currentColor;
             if (srcColor != currentColor + parseInt(penOpacity * 255).toString(16))
                 fillFunc(mouseX, mouseY, srcColor);
@@ -314,10 +336,9 @@ window.addEventListener(events.LOAD, function(){
         else if (mode == penMode.MAGIC_ERASER)
         {
             const srcPoint = ctx.getImageData(mouseX, mouseY, 1, 1).data;
-            console.log(srcPoint[3]);
             if (srcPoint[3] > 0)
             {
-                magicalEraserFunc(mouseX, mouseY, rgbToHex(srcPoint));
+                magicalEraserFunc(mouseX, mouseY, rgbToHex(srcPoint).slice(0, 7));
             }
         }
     })
@@ -375,7 +396,7 @@ window.addEventListener(events.LOAD, function(){
             importFileReader.readAsDataURL(e.target.files[0]);
     })
     newCanvas.addEventListener(events.CLICK, function(){
-        if (confirm("Your work isn unsaved and your progress will be deleted. Do you want to create a new canvas?"))
+        if (confirm("Your work is unsaved and your progress will be deleted. Do you want to create a new canvas?"))
         {
             while (history.length)
                 history.pop();
