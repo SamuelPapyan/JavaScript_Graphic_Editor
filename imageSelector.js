@@ -62,24 +62,28 @@ class ImageImport
     static flipHorizontal(){
         ImageImport.flipX *= -1;
         ImageImport.commitTransform();
+        console.log(ImageImport.image.style.top, ImageImport.image.style.left);
     }
     static flipVertical(){
         ImageImport.flipY *= -1;
         ImageImport.commitTransform();
+        console.log(ImageImport.image.style.top, ImageImport.image.style.left);
     }
     static rotateLeft(){
         ImageImport.imageDegree--;
         ImageImport.commitTransform();
+        console.log(ImageImport.image.style.top, ImageImport.image.style.left);
     }
     static rotateRight(){
         ImageImport.imageDegree++;
         ImageImport.commitTransform();
+        console.log(ImageImport.image.style.top, ImageImport.image.style.left);
     }
     static commitChanges(){
         const w = parseInt(ImageImport.image.clientWidth);
         const h = parseInt(ImageImport.image.clientHeight);
-        const x = parseInt(ImageImport.image.style.left) - ImageImport.canvas.getClientRects()[0].x + w / 2;
-        const y = parseInt(ImageImport.image.style.top) - ImageImport.canvas.getClientRects()[0].y + h / 2;
+        const x = parseInt(ImageImport.image.style.left) - (ImageImport.canvas.offsetLeft) + w / 2;
+        const y = parseInt(ImageImport.image.style.top) - (ImageImport.canvas.offsetTop) + h / 2;
         ImageImport.context.save();
         ImageImport.context.translate(x, y);
         ImageImport.context.rotate((ImageImport.imageDegree) * Math.PI / 180);
